@@ -1,0 +1,11 @@
+# DocFinQA: FinQA questions over full 150-page SEC filings (ACL 2024)
+model: claude-sonnet-4-6
+temperature: 0.0
+max_tokens: 16384
+max_loops: 15
+max_token_budget: 128000
+top_k: 5
+embedding_model: all-MiniLM-L6-v2
+embedding_device: cpu
+chunks_file: data/docfinqa/chunks.json
+index_dir: data/docfinqa/index
