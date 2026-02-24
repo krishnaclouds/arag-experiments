@@ -318,7 +318,7 @@ def generate_report(
     naive_cov = naive_agg.get("avg_coverage", 0.0)
     stuffing_cov = stuffing_agg.get("avg_coverage", 0.0)
 
-    has_recall = arag_agg.get("avg_recall") is not None
+    has_recall = (arag_agg.get("avg_recall") or 0.0) > 0.0
     ret = _retrieval_analysis(arag_records)
 
     error_a = _error_taxonomy(arag_records)

@@ -2,13 +2,16 @@
 """
 Prepare ECTSUM for A-RAG summarization evaluation.
 
-Downloads 495 earnings call transcripts + expert summaries + key factual
-sentences from the ECTSum dataset, chunks each transcript, builds a FAISS
-sentence-level index, derives gold_chunk_map.json for retrieval P/R
-evaluation, and writes questions.json.
+Downloads 495 earnings call transcripts + expert summaries from the ECTSum
+dataset, chunks each transcript, builds a FAISS sentence-level index, derives
+gold_chunk_map.json for retrieval P/R evaluation, and writes questions.json.
 
-Dataset: https://github.com/rajdeep-biswas/ECTSum (EMNLP 2022)
-HuggingFace mirror: nickmuchi/ect-sum
+Dataset: https://github.com/rajdeep345/ECTSum (EMNLP 2022)
+HuggingFace mirror: mrSoul7766/ECTSum (primary), ChanceFocus/flare-ectsum,
+                    FinanceMTEB/ECTsum
+
+Key sentences for gold_chunk_map are derived from the expert summary lines
+(each newline-separated line is one key factual sentence in the ECTSum format).
 
 Outputs (written to --output directory):
   chunks.json          — chunked transcripts in A-RAG format
@@ -17,7 +20,7 @@ Outputs (written to --output directory):
   gold_chunk_map.json  — {question_id: [chunk_id, ...]} for retrieval P/R
 
 Usage:
-    uv run python scripts/prepare_ectsum.py              # full run
+    uv run python scripts/prepare_ectsum.py              # full run (495 items)
     uv run python scripts/prepare_ectsum.py --limit 20   # dev run
     uv run python scripts/prepare_ectsum.py --data-dir /path/to/ECTSum/data
 """
@@ -40,9 +43,9 @@ from src.arag.indexing.chunker import chunk_text
 # Data loading — HuggingFace (primary) or local directory (fallback)
 # ---------------------------------------------------------------------------
 
-# Known column aliases across ECTSum versions
-_TRANSCRIPT_COLS = ["transcript", "original", "transcript_text", "text"]
-_SUMMARY_COLS    = ["summary", "reference_summary", "label", "target"]
+# Known column aliases across ECTSum dataset versions
+_TRANSCRIPT_COLS = ["text", "transcript", "original", "transcript_text", "document"]
+_SUMMARY_COLS    = ["summary", "reference_summary", "label", "target", "answer"]
 _KEYPOINTS_COLS  = ["keypoints", "key_sentences", "kfs", "highlights", "key_points"]
 _ID_COLS         = ["id", "doc_id", "filename", "file_id"]
 
@@ -77,20 +80,22 @@ def _parse_keypoints(raw) -> list[str]:
 
 def _load_from_huggingface(limit: int | None) -> list[dict]:
     """Load via the `datasets` library from HuggingFace."""
-    from datasets import load_dataset, concatenate_datasets
+    from datasets import load_dataset, concatenate_datasets, DatasetDict
 
-    # Try known HuggingFace dataset names for ECTSum
+    # Candidate datasets in priority order.
+    # mrSoul7766/ECTSum test split = the 495 standard benchmark items.
     candidates = [
-        ("nickmuchi/ect-sum", "train"),
-        ("nickmuchi/ect-sum", None),           # auto-split
-        ("rajdeepd-netapp/ECTSum", "train"),
+        ("mrSoul7766/ECTSum", "test"),          # 495 test items — standard benchmark
+        ("mrSoul7766/ECTSum", "train"),          # 1681 train items — if test fails
+        ("ChanceFocus/flare-ectsum", "test"),
+        ("FinanceMTEB/ECTsum", "test"),
     ]
     ds = None
     for repo_id, split in candidates:
         try:
-            print(f"  Trying HuggingFace dataset '{repo_id}' …")
-            ds = load_dataset(repo_id, split=split, trust_remote_code=True)
-            print(f"  Loaded from '{repo_id}'")
+            print(f"  Trying HuggingFace dataset '{repo_id}' (split='{split}') …")
+            ds = load_dataset(repo_id, split=split)
+            print(f"  Loaded {len(ds)} rows from '{repo_id}/{split}'")
             break
         except Exception as e:
             print(f"  Not found: {e}")
@@ -99,16 +104,12 @@ def _load_from_huggingface(limit: int | None) -> list[dict]:
         raise RuntimeError(
             "Could not load ECTSum from HuggingFace. "
             "Provide a local data directory with --data-dir, or check "
-            "https://github.com/rajdeep-biswas/ECTSum for the latest download instructions."
+            "https://github.com/rajdeep345/ECTSum for the latest download instructions."
         )
 
-    # If we got a DatasetDict (multiple splits), concatenate all splits
-    try:
-        from datasets import DatasetDict
-        if isinstance(ds, DatasetDict):
-            ds = concatenate_datasets(list(ds.values()))
-    except Exception:
-        pass
+    # Flatten DatasetDict if we somehow got one
+    if isinstance(ds, DatasetDict):
+        ds = concatenate_datasets(list(ds.values()))
 
     rows = list(ds)
     if limit:
@@ -292,7 +293,17 @@ def main() -> None:
         if not transcript or not summary:
             continue  # skip empty rows
 
-        key_sentences = _parse_keypoints(row.get(keypoints_col, "")) if keypoints_col else []
+        # Use keypoints column if present; otherwise derive key sentences from
+        # summary lines (each line in the ECTSum summary is a key factual sentence).
+        if keypoints_col and row.get(keypoints_col):
+            key_sentences = _parse_keypoints(row[keypoints_col])
+        else:
+            # Split summary by newlines — each line is one KFS in ECTSum format
+            key_sentences = [
+                s.strip().lstrip("-•* ").strip()
+                for s in summary.splitlines()
+                if s.strip()
+            ]
 
         # Derive a stable ID
         if id_col and row.get(id_col):
@@ -301,10 +312,19 @@ def main() -> None:
         else:
             question_id = f"ectsum_{i:04d}"
 
-        # Extract company / period from the ID if present (e.g. "AAPL_Q3_2019")
-        parts = question_id.replace("ectsum_", "").split("_")
-        company = parts[0].upper() if parts else "UNKNOWN"
-        period  = "_".join(parts[1:]) if len(parts) > 1 else str(i)
+        # Extract company / period from the ID if it follows TICKER_Qn_YYYY format.
+        # If the ID is just a numeric index (no ticker info), leave company/period empty
+        # so the question text degrades gracefully.
+        raw_suffix = question_id.replace("ectsum_", "")
+        parts = raw_suffix.split("_")
+        # Only treat parts as company/period if the first token looks like a ticker
+        # (alphabetic, 1-5 chars) rather than a plain zero-padded number.
+        if len(parts) >= 2 and parts[0].isalpha() and len(parts[0]) <= 5:
+            company = parts[0].upper()
+            period  = "_".join(parts[1:])
+        else:
+            company = ""
+            period  = ""
 
         metadata = (
             f"[COMPANY: {company} | TYPE: EARNINGS_CALL | "
@@ -375,13 +395,19 @@ def main() -> None:
     questions: list[dict] = []
 
     for sample in samples:
+        company = sample["company"]
+        period  = sample["period"].replace("_", " ") if sample["period"] else ""
+        if company and period:
+            q_text = f"Summarize the key highlights from the {company} {period} earnings call."
+        elif company:
+            q_text = f"Summarize the key highlights from this {company} earnings call."
+        else:
+            q_text = "Summarize the key highlights from this earnings call."
+
         questions.append({
             "id": sample["id"],
             "source": "ectsum",
-            "question": (
-                f"Summarize the key highlights from the {sample['company']} "
-                f"{sample['period'].replace('_', ' ')} earnings call."
-            ),
+            "question": q_text,
             "answer": sample["summary"],
             "question_type": "summarization",
             "summarization_style": "earnings_call",
