@@ -2,15 +2,21 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from typing import Any
 
 import anthropic
 
-from ..config import AgentConfig, get_api_key
+from ..config import AgentConfig, compute_cost, get_api_key
 from ..tools.chunk_read import ChunkReadTool
 from ..tools.keyword_search import KeywordSearchTool
 from ..tools.semantic_search import SemanticSearchTool
-from .prompts import SYSTEM_PROMPT
+from .prompts import SUMMARIZATION_SYSTEM_PROMPT, SYSTEM_PROMPT
+
+_PROMPTS = {
+    "qa": SYSTEM_PROMPT,
+    "summarization": SUMMARIZATION_SYSTEM_PROMPT,
+}
 
 
 class AgentLoop:
@@ -52,25 +58,30 @@ class AgentLoop:
         Run the agent loop for a single question.
 
         Returns a dict with:
-          answer         : str   — final answer text
-          trace          : list  — [{loop, tool, input, output}, ...]
-          loops          : int   — number of iterations used
-          input_tokens   : int
-          output_tokens  : int
+          answer            : str   — final answer text
+          trace             : list  — [{loop, tool, input, output}, ...]
+          loops             : int   — number of iterations used
+          input_tokens      : int
+          output_tokens     : int
+          cost_usd          : float — estimated API cost for this question
+          latency_ms        : int   — wall-clock time from first call to final answer
+          word_count        : int   — word count of the final answer
           max_loops_reached : bool (only present if True)
         """
         self._chunk_tool.reset()
 
+        system_prompt = _PROMPTS.get(self.config.task_type, SYSTEM_PROMPT)
         messages: list[dict] = [{"role": "user", "content": question}]
         trace: list[dict] = []
         total_in = total_out = 0
+        t_start = time.monotonic()
 
         for loop_idx in range(self.config.max_loops):
             response = self._client.messages.create(
                 model=self.config.model,
                 max_tokens=self.config.max_tokens,
                 temperature=self.config.temperature,
-                system=SYSTEM_PROMPT,
+                system=system_prompt,
                 tools=self._tool_schemas,
                 messages=messages,
             )
@@ -81,13 +92,16 @@ class AgentLoop:
             if response.stop_reason == "end_turn":
                 answer = "".join(
                     b.text for b in response.content if hasattr(b, "text")
-                )
+                ).strip()
                 return {
-                    "answer": answer.strip(),
+                    "answer": answer,
                     "trace": trace,
                     "loops": loop_idx + 1,
                     "input_tokens": total_in,
                     "output_tokens": total_out,
+                    "cost_usd": compute_cost(self.config.model, total_in, total_out),
+                    "latency_ms": int((time.monotonic() - t_start) * 1000),
+                    "word_count": len(answer.split()),
                 }
 
             # ---- tool call(s) ----
@@ -140,16 +154,21 @@ class AgentLoop:
             model=self.config.model,
             max_tokens=self.config.max_tokens,
             temperature=self.config.temperature,
-            system=SYSTEM_PROMPT,
+            system=system_prompt,
             messages=messages,
         )
-        answer = "".join(b.text for b in response.content if hasattr(b, "text"))
+        answer = "".join(b.text for b in response.content if hasattr(b, "text")).strip()
+        total_in += response.usage.input_tokens
+        total_out += response.usage.output_tokens
         return {
-            "answer": answer.strip(),
+            "answer": answer,
             "trace": trace,
             "loops": self.config.max_loops,
-            "input_tokens": total_in + response.usage.input_tokens,
-            "output_tokens": total_out + response.usage.output_tokens,
+            "input_tokens": total_in,
+            "output_tokens": total_out,
+            "cost_usd": compute_cost(self.config.model, total_in, total_out),
+            "latency_ms": int((time.monotonic() - t_start) * 1000),
+            "word_count": len(answer.split()),
             "max_loops_reached": True,
         }
 

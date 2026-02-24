@@ -119,6 +119,9 @@ def main() -> None:
                 "loops": result["loops"],
                 "input_tokens": result["input_tokens"],
                 "output_tokens": result["output_tokens"],
+                "cost_usd": result["cost_usd"],
+                "latency_ms": result["latency_ms"],
+                "word_count": result["word_count"],
                 "max_loops_reached": result.get("max_loops_reached", False),
                 "trace": result["trace"],
             }

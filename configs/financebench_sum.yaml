@@ -1,0 +1,16 @@
+# FinanceBench derived query-focused summarization tasks (~80 questions)
+# Reuses the existing FinanceBench chunks.json and FAISS index — no new indexing needed.
+# Generate questions first: uv run python scripts/derive_financebench_sum.py
+model: claude-sonnet-4-6
+temperature: 0.0
+max_tokens: 16384
+max_loops: 22
+max_token_budget: 200000
+top_k: 5
+embedding_model: all-MiniLM-L6-v2
+embedding_device: cpu
+task_type: summarization
+summarization_style: query_focused
+target_length: 200
+chunks_file: data/financebench/chunks.json
+index_dir: data/financebench/index

@@ -1,0 +1,15 @@
+# ECTSUM: 495 earnings call transcripts with expert-written reference summaries
+# Source: https://github.com/rajdeep-biswas/ECTSum (EMNLP 2022)
+model: claude-sonnet-4-6
+temperature: 0.0
+max_tokens: 16384
+max_loops: 22
+max_token_budget: 200000
+top_k: 5
+embedding_model: all-MiniLM-L6-v2
+embedding_device: cpu
+task_type: summarization
+summarization_style: earnings_call
+target_length: 75
+chunks_file: data/ectsum/chunks.json
+index_dir: data/ectsum/index
