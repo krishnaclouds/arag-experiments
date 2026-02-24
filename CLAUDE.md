@@ -218,8 +218,8 @@ OMP_NUM_THREADS=1              # prevents segfault on Apple Silicon
 |---|---|---|
 | **Phase 1** | Config fields, prompts, cost/latency tracking | ✅ Done |
 | **Phase 2** | G-Eval + error taxonomy in `eval.py` | ✅ Done |
-| **Phase 3** | ECTSUM dataset pipeline (`prepare_ectsum.py`) | Pending |
-| **Phase 4** | FinanceBench derived QFS tasks | Pending |
-| **Phase 5** | Three-baseline setup (naive RAG + long-context stuffing) | Pending |
+| **Phase 3** | ECTSUM dataset pipeline (`prepare_ectsum.py`) | ✅ Done |
+| **Phase 4** | FinanceBench derived QFS tasks | ✅ Done |
+| **Phase 5** | Three-baseline setup (naive RAG + long-context stuffing) | ✅ Done |
 | **Phase 6** | Full evaluation run and analysis report | Pending |
 | **Phase 7** | Streamlit UI extensions | Pending |

@@ -1,0 +1,14 @@
+# Naive RAG baseline on ECTSUM — semantic top-k retrieval + single LLM call
+# Run: uv run python baselines/naive_rag_summary.py --config configs/ectsum_naive.yaml --output results/ectsum_naive
+model: claude-sonnet-4-6
+temperature: 0.0
+max_tokens: 512
+max_loops: 1
+top_k: 5
+embedding_model: all-MiniLM-L6-v2
+embedding_device: cpu
+task_type: summarization
+summarization_style: earnings_call
+target_length: 75
+chunks_file: data/ectsum/chunks.json
+index_dir: data/ectsum/index
