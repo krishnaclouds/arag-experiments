@@ -43,10 +43,7 @@ data/*/sec-edgar-filings/
 !data/.gitkeep
 !data/*/.gitkeep
 
-# ---- Results (large prediction files) ----
-# Keep the human-readable report; exclude raw prediction dumps
-results/*/predictions.jsonl
-results/*/predictions.eval.jsonl
+# ---- Results ----
 # Keep the report and directory stubs
 !results/.gitkeep
 !results/*/.gitkeep
