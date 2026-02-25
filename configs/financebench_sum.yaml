@@ -3,7 +3,7 @@
 # Generate questions first: uv run python scripts/derive_financebench_sum.py
 model: claude-sonnet-4-6
 temperature: 0.0
-max_tokens: 16384
+max_tokens: 4096
 max_loops: 22
 max_token_budget: 200000
 top_k: 5

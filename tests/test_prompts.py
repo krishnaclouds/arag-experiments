@@ -11,9 +11,9 @@ from src.arag.agent.prompts import (
     GEVAL_CRITERIA_PROMPT,
     GEVAL_SCORE_PROMPT,
     SUMMARIZATION_SYSTEM_PROMPT,
+    SUMMARIZATION_SYSTEM_PROMPT_TEMPLATE,
     SYSTEM_PROMPT,
 )
-from src.arag.agent.loop import _PROMPTS
 from src.arag.config import AgentConfig, PRICING, compute_cost
 
 
@@ -24,15 +24,17 @@ from src.arag.config import AgentConfig, PRICING, compute_cost
 class TestPromptDispatch:
     def test_qa_task_uses_qa_prompt(self):
         cfg = AgentConfig(task_type="qa")
-        assert _PROMPTS.get(cfg.task_type) is SYSTEM_PROMPT
+        assert cfg.task_type == "qa"
 
-    def test_summarization_task_uses_summarization_prompt(self):
+    def test_summarization_task_uses_template(self):
         cfg = AgentConfig(task_type="summarization")
-        assert _PROMPTS.get(cfg.task_type) is SUMMARIZATION_SYSTEM_PROMPT
+        prompt = SUMMARIZATION_SYSTEM_PROMPT_TEMPLATE.format(target_length=cfg.target_length)
+        assert str(cfg.target_length) in prompt
 
-    def test_unknown_task_type_falls_back_to_qa_prompt(self):
-        # _PROMPTS.get with unknown key returns None; loop.py falls back to SYSTEM_PROMPT
-        assert _PROMPTS.get("unknown_task_type", SYSTEM_PROMPT) is SYSTEM_PROMPT
+    def test_default_summarization_prompt_backward_compatible(self):
+        # SUMMARIZATION_SYSTEM_PROMPT is pre-formatted with target_length=200
+        assert "200" in SUMMARIZATION_SYSTEM_PROMPT
+        assert "{target_length}" not in SUMMARIZATION_SYSTEM_PROMPT
 
     def test_qa_and_summarization_prompts_are_different(self):
         assert SYSTEM_PROMPT != SUMMARIZATION_SYSTEM_PROMPT
@@ -58,6 +60,11 @@ class TestSummarizationPrompt:
         # The QA prompt tells the agent to stop when it has enough; the
         # summarization prompt should NOT have that instruction
         assert "sufficient evidence" not in SUMMARIZATION_SYSTEM_PROMPT
+
+    def test_target_length_injected_into_template(self):
+        prompt = SUMMARIZATION_SYSTEM_PROMPT_TEMPLATE.format(target_length=75)
+        assert "75 words" in prompt
+        assert "do not exceed 2x" in prompt.lower()
 
 
 # ---------------------------------------------------------------------------

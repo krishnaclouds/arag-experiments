@@ -33,6 +33,10 @@ import sys
 import zipfile
 import urllib.request
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sentence_transformers import SentenceTransformer
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -195,6 +199,43 @@ def build_gold_chunk_map(
     return sorted(gold_ids)
 
 
+def _embed_match_gold_chunks(
+    key_sentences: list[str],
+    doc_chunks: list[tuple[int, str]],
+    model: "SentenceTransformer",
+    threshold: float = 0.35,
+) -> list[int]:
+    """
+    Embedding-based gold chunk matching: embed each key sentence and each
+    chunk, then match by cosine similarity > threshold.
+
+    This handles the abstractive nature of ECTSum key sentences which often
+    don't appear verbatim in the transcript chunks.
+    """
+    import numpy as np
+
+    if not key_sentences or not doc_chunks:
+        return []
+
+    # Embed key sentences
+    sent_embeddings = model.encode(key_sentences, normalize_embeddings=True)
+
+    # Embed chunks (use first 512 chars to keep embedding focused on content)
+    chunk_texts = [text[:512] for _, text in doc_chunks]
+    chunk_embeddings = model.encode(chunk_texts, normalize_embeddings=True)
+
+    # Cosine similarity matrix: (n_sentences, n_chunks)
+    sim_matrix = np.dot(sent_embeddings, chunk_embeddings.T)
+
+    gold_ids: set[int] = set()
+    for sent_idx in range(len(key_sentences)):
+        best_chunk_idx = int(np.argmax(sim_matrix[sent_idx]))
+        if sim_matrix[sent_idx, best_chunk_idx] >= threshold:
+            gold_ids.add(doc_chunks[best_chunk_idx][0])
+
+    return sorted(gold_ids)
+
+
 # ---------------------------------------------------------------------------
 # chunks.json builder (custom — tracks per-doc chunk IDs)
 # ---------------------------------------------------------------------------
@@ -327,7 +368,7 @@ def main() -> None:
             period  = ""
 
         metadata = (
-            f"[COMPANY: {company} | TYPE: EARNINGS_CALL | "
+            f"[DOC_ID: {question_id} | COMPANY: {company} | TYPE: EARNINGS_CALL | "
             f"PERIOD: {period} | SECTION: transcript]"
         )
 
@@ -347,11 +388,16 @@ def main() -> None:
     print(f"\nChunking {len(docs)} transcripts (max_tokens={args.max_tokens}) …")
     _, doc_chunk_lists = build_chunks_for_docs(docs, chunks_file, max_tokens=args.max_tokens)
 
-    # ---- Build gold_chunk_map.json ----
+    # ---- Build gold_chunk_map.json (embedding-based with substring fallback) ----
     print("\nBuilding gold_chunk_map.json …")
+    print("Loading embedding model for gold chunk matching …")
+    from sentence_transformers import SentenceTransformer
+    embed_model = SentenceTransformer(args.embedding_model, device=args.device)
+
     gold_chunk_map: dict[str, list[int]] = {}
     no_kfs_count = 0
     no_match_count = 0
+    embed_match_count = 0
 
     for sample, doc_chunks in zip(samples, doc_chunk_lists):
         qid = sample["id"]
@@ -362,7 +408,14 @@ def main() -> None:
             gold_chunk_map[qid] = []
             continue
 
-        gold_ids = build_gold_chunk_map(qid, kfs, doc_chunks)
+        # Try embedding-based matching first
+        gold_ids = _embed_match_gold_chunks(kfs, doc_chunks, embed_model)
+        if gold_ids:
+            embed_match_count += 1
+        else:
+            # Fall back to substring matching
+            gold_ids = build_gold_chunk_map(qid, kfs, doc_chunks)
+
         gold_chunk_map[qid] = gold_ids
         if not gold_ids:
             no_match_count += 1
@@ -373,6 +426,8 @@ def main() -> None:
 
     covered = sum(1 for v in gold_chunk_map.values() if v)
     print(f"gold_chunk_map: {covered}/{len(samples)} questions have ≥1 gold chunk")
+    if embed_match_count:
+        print(f"  {embed_match_count} matched via embedding similarity")
     if no_kfs_count:
         print(f"  {no_kfs_count} samples had no key sentences (retrieval P/R will be 0)")
     if no_match_count:
@@ -394,15 +449,16 @@ def main() -> None:
     print("\nBuilding questions.json …")
     questions: list[dict] = []
 
-    for sample in samples:
+    for sample, doc_chunks in zip(samples, doc_chunk_lists):
         company = sample["company"]
         period  = sample["period"].replace("_", " ") if sample["period"] else ""
+        doc_ref = f" (document {sample['id']})"
         if company and period:
-            q_text = f"Summarize the key highlights from the {company} {period} earnings call."
+            q_text = f"Summarize the key highlights from the {company} {period} earnings call transcript{doc_ref}."
         elif company:
-            q_text = f"Summarize the key highlights from this {company} earnings call."
+            q_text = f"Summarize the key highlights from this {company} earnings call transcript{doc_ref}."
         else:
-            q_text = "Summarize the key highlights from this earnings call."
+            q_text = f"Summarize the key highlights from this earnings call transcript{doc_ref}."
 
         questions.append({
             "id": sample["id"],
@@ -413,6 +469,7 @@ def main() -> None:
             "summarization_style": "earnings_call",
             "evidence": " | ".join(sample["key_sentences"]),
             "evidence_relations": [],
+            "doc_chunk_ids": [cid for cid, _ in doc_chunks],
         })
 
     questions_file = str(output_dir / "questions.json")

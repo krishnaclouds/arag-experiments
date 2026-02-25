@@ -2,7 +2,7 @@
 # Run: uv run python baselines/long_context_summary.py --config configs/ectsum_stuffing.yaml --output results/ectsum_stuffing
 model: claude-sonnet-4-6
 temperature: 0.0
-max_tokens: 512
+max_tokens: 2048
 max_loops: 1
 max_token_budget: 200000
 top_k: 5

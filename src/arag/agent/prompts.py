@@ -24,7 +24,7 @@ a rephrased query.
 - If the corpus does not contain enough information to answer, say so explicitly.
 """
 
-SUMMARIZATION_SYSTEM_PROMPT = """\
+SUMMARIZATION_SYSTEM_PROMPT_TEMPLATE = """\
 You are an expert financial analyst with access to a document corpus. Your task \
 is to produce a coherent, accurate summary by systematically retrieving evidence \
 using the tools provided.
@@ -52,10 +52,14 @@ when you are confident you have a broad picture — not just the first section y
 - Only include claims directly supported by the chunks you retrieved. Do not \
 invent figures, dates, or events not present in the retrieved content.
 - Write in clear, professional prose.
+- Aim for approximately {target_length} words. Be concise — do not exceed 2x this target.
 - Open with one sentence establishing company, period, and document type.
 - Cover the key body points in order of importance.
 - Close with forward-looking statements or guidance if present in the document.
 """
+
+# Backward-compatible default with target_length=200
+SUMMARIZATION_SYSTEM_PROMPT = SUMMARIZATION_SYSTEM_PROMPT_TEMPLATE.format(target_length=200)
 
 # ---------------------------------------------------------------------------
 # G-Eval prompt templates (used by scripts/eval.py for summarization evaluation)

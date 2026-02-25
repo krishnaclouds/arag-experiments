@@ -2,7 +2,7 @@
 # Run: uv run python baselines/naive_rag_summary.py --config configs/ectsum_naive.yaml --output results/ectsum_naive
 model: claude-sonnet-4-6
 temperature: 0.0
-max_tokens: 512
+max_tokens: 2048
 max_loops: 1
 top_k: 5
 embedding_model: all-MiniLM-L6-v2

@@ -2,7 +2,7 @@
 # Source: https://github.com/rajdeep-biswas/ECTSum (EMNLP 2022)
 model: claude-sonnet-4-6
 temperature: 0.0
-max_tokens: 16384
+max_tokens: 2048
 max_loops: 22
 max_token_budget: 200000
 top_k: 5

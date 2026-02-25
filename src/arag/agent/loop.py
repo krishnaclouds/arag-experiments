@@ -11,12 +11,7 @@ from ..config import AgentConfig, compute_cost, get_api_key
 from ..tools.chunk_read import ChunkReadTool
 from ..tools.keyword_search import KeywordSearchTool
 from ..tools.semantic_search import SemanticSearchTool
-from .prompts import SUMMARIZATION_SYSTEM_PROMPT, SYSTEM_PROMPT
-
-_PROMPTS = {
-    "qa": SYSTEM_PROMPT,
-    "summarization": SUMMARIZATION_SYSTEM_PROMPT,
-}
+from .prompts import SUMMARIZATION_SYSTEM_PROMPT_TEMPLATE, SYSTEM_PROMPT
 
 
 class AgentLoop:
@@ -70,7 +65,12 @@ class AgentLoop:
         """
         self._chunk_tool.reset()
 
-        system_prompt = _PROMPTS.get(self.config.task_type, SYSTEM_PROMPT)
+        if self.config.task_type == "summarization":
+            system_prompt = SUMMARIZATION_SYSTEM_PROMPT_TEMPLATE.format(
+                target_length=self.config.target_length,
+            )
+        else:
+            system_prompt = SYSTEM_PROMPT
         messages: list[dict] = [{"role": "user", "content": question}]
         trace: list[dict] = []
         total_in = total_out = 0
@@ -87,6 +87,25 @@ class AgentLoop:
             )
             total_in += response.usage.input_tokens
             total_out += response.usage.output_tokens
+
+            # ---- token budget guard ----
+            if total_in + total_out > self.config.max_token_budget:
+                answer = "".join(
+                    b.text for b in response.content if hasattr(b, "text")
+                ).strip()
+                if answer:
+                    return {
+                        "answer": answer,
+                        "trace": trace,
+                        "loops": loop_idx + 1,
+                        "input_tokens": total_in,
+                        "output_tokens": total_out,
+                        "cost_usd": compute_cost(self.config.model, total_in, total_out),
+                        "latency_ms": int((time.monotonic() - t_start) * 1000),
+                        "word_count": len(answer.split()),
+                        "max_loops_reached": True,
+                    }
+                break  # fall through to best-effort answer prompt
 
             # ---- final answer ----
             if response.stop_reason == "end_turn":

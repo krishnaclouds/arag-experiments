@@ -142,9 +142,9 @@ def _parse_geval_score(text: str) -> int | None:
     if m:
         return int(m.group(1))
     # Fallback: last standalone digit 1-5 in the text
-    m = re.search(r"\b([1-5])\b(?![\d])", text[::-1])
-    if m:
-        return int(m.group(1))
+    matches = re.findall(r"\b([1-5])\b", text)
+    if matches:
+        return int(matches[-1])
     return None
 
 
@@ -468,12 +468,32 @@ def run_summarization_eval(args: argparse.Namespace) -> None:
     # Evaluate each item in parallel
     eval_results: list[dict] = [{}] * len(items)
 
+    import logging
+
     def _eval(idx_item: tuple[int, dict]) -> tuple[int, dict]:
         idx, item = idx_item
-        return idx, eval_summarization_item(
-            item, client, args.judge_model,
-            faith_criteria, cov_criteria, gold_chunk_map,
-        )
+        try:
+            return idx, eval_summarization_item(
+                item, client, args.judge_model,
+                faith_criteria, cov_criteria, gold_chunk_map,
+            )
+        except Exception:
+            logging.warning("eval failed for item %s", item.get("id"), exc_info=True)
+            return idx, {
+                "id": item.get("id"),
+                "geval_faithfulness": 3,
+                "geval_faithfulness_reasoning": "EVAL_ERROR",
+                "geval_coverage": 3,
+                "geval_coverage_reasoning": "EVAL_ERROR",
+                "retrieval_recall": 0.0,
+                "retrieval_precision": 0.0,
+                "rouge2_f1": 0.0,
+                "word_count": item.get("word_count", len(item.get("predicted", "").split())),
+                "loops": item.get("loops"),
+                "cost_usd": item.get("cost_usd"),
+                "latency_ms": item.get("latency_ms"),
+                "error_codes": ["EVAL_ERROR"],
+            }
 
     with ThreadPoolExecutor(max_workers=args.workers) as executor:
         futures = {executor.submit(_eval, (i, item)): i for i, item in enumerate(items)}

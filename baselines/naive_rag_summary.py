@@ -27,7 +27,7 @@ from tqdm import tqdm
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.arag.agent.prompts import SUMMARIZATION_SYSTEM_PROMPT
+from src.arag.agent.prompts import SUMMARIZATION_SYSTEM_PROMPT_TEMPLATE
 from src.arag.config import AgentConfig, compute_cost, get_api_key
 from src.arag.tools.chunk_read import ChunkReadTool
 from src.arag.tools.semantic_search import SemanticSearchTool
@@ -57,12 +57,15 @@ def run_naive_rag_summary(
         if "text" in r
     )
 
+    system_prompt = SUMMARIZATION_SYSTEM_PROMPT_TEMPLATE.format(
+        target_length=config.target_length,
+    )
     prompt = f"Context:\n{context}\n\nTask: {question['question']}"
     response = client.messages.create(
         model=config.model,
         max_tokens=config.max_tokens,
         temperature=config.temperature,
-        system=SUMMARIZATION_SYSTEM_PROMPT,
+        system=system_prompt,
         messages=[{"role": "user", "content": prompt}],
     )
     answer = response.content[0].text.strip()

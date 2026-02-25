@@ -34,7 +34,7 @@ from tqdm import tqdm
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.arag.agent.prompts import SUMMARIZATION_SYSTEM_PROMPT
+from src.arag.agent.prompts import SUMMARIZATION_SYSTEM_PROMPT_TEMPLATE
 from src.arag.config import AgentConfig, compute_cost, get_api_key
 
 # Approximate characters-per-token ratio (conservative)
@@ -63,20 +63,38 @@ def _get_doc_chunks(
     """
     Filter chunks to only those belonging to the document for this question.
 
-    Matching strategy: look for the company name and period in the chunk's
-    metadata prefix (case-insensitive).  Falls back to all chunks if no
-    company field is present — this means every question gets the full corpus
-    context, which is only appropriate for single-document datasets.
+    Matching strategy (in priority order):
+    1. Explicit doc_chunk_ids list from questions.json (set by prepare_ectsum.py)
+    2. DOC_ID metadata tag in chunk text
+    3. Company name + period matching in metadata prefix (legacy fallback)
+    Falls back to all chunks if nothing matches.
     """
+    # Strategy 1: explicit doc_chunk_ids from questions.json
+    doc_chunk_ids = question.get("doc_chunk_ids")
+    if doc_chunk_ids:
+        id_set = set(doc_chunk_ids)
+        matched = [(cid, text) for cid, text in all_chunks if cid in id_set]
+        if matched:
+            return matched
+
+    # Strategy 2: DOC_ID metadata tag
+    question_id = question.get("id", "")
+    if question_id:
+        doc_id_tag = f"DOC_ID: {question_id}".upper()
+        matched = [(cid, text) for cid, text in all_chunks if doc_id_tag in text.upper()]
+        if matched:
+            return matched
+
+    # Strategy 3: company + period matching (legacy fallback)
     company = (
         question.get("company", "")
-        or _extract_from_id(question["id"], "company")
+        or _extract_from_id(question_id, "company")
     ).strip().upper()
 
     period = (
         question.get("period", "")
         or question.get("doc_period", "")
-        or _extract_from_id(question["id"], "period")
+        or _extract_from_id(question_id, "period")
     ).strip().upper().replace(" ", "_")
 
     if not company:
@@ -146,12 +164,15 @@ def run_stuffing(
             "trace": [],
         }
 
+    system_prompt = SUMMARIZATION_SYSTEM_PROMPT_TEMPLATE.format(
+        target_length=config.target_length,
+    )
     prompt = f"Context:\n{full_context}\n\nTask: {question['question']}"
     response = client.messages.create(
         model=config.model,
         max_tokens=config.max_tokens,
         temperature=config.temperature,
-        system=SUMMARIZATION_SYSTEM_PROMPT,
+        system=system_prompt,
         messages=[{"role": "user", "content": prompt}],
     )
     answer    = response.content[0].text.strip()
