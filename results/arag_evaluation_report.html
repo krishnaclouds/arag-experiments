@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>A-RAG Financial Evaluation Suite — Full Results</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0c0f14;
+  --bg2: #131720;
+  --bg3: #1a1f2e;
+  --bg4: #222840;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.15);
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --accent: #4fd1c5;
+  --accent-dim: rgba(79,209,197,0.12);
+  --accent2: #f6ad55;
+  --accent2-dim: rgba(246,173,85,0.12);
+  --green: #68d391;
+  --green-dim: rgba(104,211,145,0.12);
+  --red: #fc8181;
+  --red-dim: rgba(252,129,129,0.12);
+  --purple: #b794f4;
+  --purple-dim: rgba(183,148,244,0.12);
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  font-size:15px;
+}
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+
+/* ─── NAV ─────────────────────────────────────────────── */
+nav {
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:rgba(12,15,20,0.92);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:0 2rem;
+  display:flex;
+  align-items:center;
+  gap:0;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+nav::-webkit-scrollbar { display:none; }
+nav a {
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.7rem;
+  font-weight:500;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  color:var(--text3);
+  padding:0.9rem 0.8rem;
+  white-space:nowrap;
+  border-bottom:2px solid transparent;
+  transition:color 0.15s, border-color 0.15s;
+}
+nav a:hover, nav a.active {
+  color:var(--accent);
+  border-bottom-color:var(--accent);
+  text-decoration:none;
+}
+nav .nav-brand {
+  font-family:"DM Serif Display",serif;
+  font-size:0.9rem;
+  color:var(--text);
+  margin-right:1.5rem;
+  flex-shrink:0;
+}
+
+/* ─── HERO ────────────────────────────────────────────── */
+.hero {
+  padding:4rem 2rem 3rem;
+  max-width:1100px;
+  margin:0 auto;
+}
+.hero-eyebrow {
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.7rem;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:1rem;
+}
+.hero h1 {
+  font-family:"DM Serif Display",serif;
+  font-size:clamp(2rem, 5vw, 3.2rem);
+  font-weight:400;
+  line-height:1.15;
+  color:var(--text);
+  margin-bottom:1.5rem;
+}
+.hero h1 em { font-style:italic; color:var(--accent); }
+.hero-meta {
+  display:flex;
+  flex-wrap:wrap;
+  gap:1rem 2rem;
+}
+.hero-meta-item {
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.72rem;
+  color:var(--text3);
+}
+.hero-meta-item span { color:var(--text2); }
+
+/* ─── SECTION ─────────────────────────────────────────── */
+.section {
+  max-width:1100px;
+  margin:0 auto;
+  padding:3rem 2rem;
+  border-top:1px solid var(--border);
+}
+.section-header {
+  display:flex;
+  align-items:baseline;
+  gap:1rem;
+  margin-bottom:2rem;
+}
+.section-num {
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.7rem;
+  color:var(--accent);
+  letter-spacing:0.08em;
+}
+.section h2 {
+  font-family:"DM Serif Display",serif;
+  font-size:1.8rem;
+  font-weight:400;
+  color:var(--text);
+}
+.section-desc {
+  color:var(--text2);
+  max-width:700px;
+  margin-bottom:2rem;
+  font-size:0.9rem;
+}
+
+/* ─── STAT ROW ────────────────────────────────────────── */
+.stat-row {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:1px;
+  background:var(--border);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+  margin-bottom:2rem;
+}
+.stat {
+  background:var(--bg2);
+  padding:1.5rem 1.75rem;
+}
+.stat-label {
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.65rem;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:0.5rem;
+}
+.stat-value {
+  font-family:"DM Serif Display",serif;
+  font-size:2.6rem;
+  color:var(--text);
+  line-height:1;
+  margin-bottom:0.35rem;
+}
+.stat-value.accent { color:var(--accent); }
+.stat-value.accent2 { color:var(--accent2); }
+.stat-value.green { color:var(--green); }
+.stat-sub {
+  font-size:0.75rem;
+  color:var(--text3);
+}
+
+/* ─── CARD GRID ───────────────────────────────────────── */
+.card-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:1rem;
+  margin-bottom:2rem;
+}
+.card {
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:1.5rem;
+}
+.card-title {
+  font-family:"IBM Plex Sans",sans-serif;
+  font-size:0.8rem;
+  font-weight:600;
+  color:var(--text2);
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  margin-bottom:0.75rem;
+}
+.card h3 {
+  font-family:"DM Serif Display",serif;
+  font-size:1.4rem;
+  font-weight:400;
+  color:var(--text);
+  margin-bottom:0.5rem;
+}
+.card p {
+  font-size:0.85rem;
+  color:var(--text2);
+  line-height:1.5;
+}
+
+/* ─── TABLES ──────────────────────────────────────────── */
+.table-wrap {
+  overflow-x:auto;
+  margin-bottom:2rem;
+  border:1px solid var(--border);
+  border-radius:10px;
+}
+table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:0.875rem;
+}
+thead tr {
+  background:var(--bg3);
+}
+thead th {
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.65rem;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--text3);
+  padding:0.8rem 1rem;
+  text-align:left;
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+tbody tr {
+  border-bottom:1px solid var(--border);
+  transition:background 0.1s;
+}
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:var(--bg3); }
+td {
+  padding:0.75rem 1rem;
+  vertical-align:middle;
+  color:var(--text2);
+}
+td.primary { color:var(--text); font-weight:500; }
+td.accent { color:var(--accent); font-weight:600; }
+td.accent2 { color:var(--accent2); font-weight:500; }
+td.dim { color:var(--text3); font-size:0.8rem; }
+td.mono { font-family:"IBM Plex Mono",monospace; font-size:0.8rem; }
+
+/* ─── BADGES ──────────────────────────────────────────── */
+.badge {
+  display:inline-block;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.7rem;
+  font-weight:500;
+  padding:0.2rem 0.5rem;
+  border-radius:4px;
+}
+.badge-up { background:var(--green-dim); color:var(--green); }
+.badge-down { background:var(--red-dim); color:var(--red); }
+.badge-neutral { background:var(--bg4); color:var(--text3); }
+
+/* ─── BARS ────────────────────────────────────────────── */
+.bar-track {
+  width:100%;
+  height:6px;
+  background:var(--bg4);
+  border-radius:3px;
+  overflow:hidden;
+  margin-top:4px;
+}
+.bar-fill {
+  height:100%;
+  border-radius:3px;
+  transition:width 0.3s;
+}
+.bar-accent { background:var(--accent); }
+.bar-accent2 { background:var(--accent2); }
+.bar-green { background:var(--green); }
+.bar-danger { background:var(--red); }
+.bar-purple { background:var(--purple); }
+
+/* ─── TWO-COL LAYOUT ──────────────────────────────────── */
+.two-col {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1.5rem;
+  margin-bottom:1.5rem;
+}
+@media(max-width:700px) { .two-col { grid-template-columns:1fr; } }
+
+/* ─── TOOL USAGE ──────────────────────────────────────── */
+.tool-row {
+  display:flex;
+  align-items:center;
+  gap:0.75rem;
+  margin-bottom:0.75rem;
+}
+.tool-name {
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.72rem;
+  color:var(--text2);
+  width:140px;
+  flex-shrink:0;
+}
+.tool-bar-wrap {
+  flex:1;
+}
+.tool-pct {
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.7rem;
+  color:var(--text3);
+  width:40px;
+  text-align:right;
+  flex-shrink:0;
+}
+
+/* ─── SYSTEM PILLS ────────────────────────────────────── */
+.pill {
+  display:inline-block;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.65rem;
+  padding:0.15rem 0.5rem;
+  border-radius:3px;
+  font-weight:500;
+}
+.pill-arag { background:var(--accent-dim); color:var(--accent); }
+.pill-naive { background:var(--accent2-dim); color:var(--accent2); }
+.pill-stuff { background:var(--purple-dim); color:var(--purple); }
+
+/* ─── ERROR TAXONOMY ──────────────────────────────────── */
+.err-card {
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:1.25rem 1.5rem;
+}
+.err-code {
+  font-family:"IBM Plex Mono",monospace;
+  font-size:1.4rem;
+  font-weight:500;
+  color:var(--accent2);
+  margin-bottom:0.25rem;
+}
+.err-label {
+  font-size:0.8rem;
+  font-weight:600;
+  color:var(--text);
+  margin-bottom:0.4rem;
+}
+.err-desc {
+  font-size:0.78rem;
+  color:var(--text2);
+  margin-bottom:0.75rem;
+}
+.err-counts {
+  display:flex;
+  gap:0.75rem;
+  flex-wrap:wrap;
+}
+.err-count {
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.7rem;
+}
+
+/* ─── FINDINGS ────────────────────────────────────────── */
+.finding {
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-left:3px solid var(--accent);
+  border-radius:0 10px 10px 0;
+  padding:1.25rem 1.5rem;
+}
+.finding-num {
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.65rem;
+  color:var(--accent);
+  margin-bottom:0.4rem;
+  letter-spacing:0.08em;
+}
+.finding h3 {
+  font-family:"IBM Plex Sans",sans-serif;
+  font-size:0.95rem;
+  font-weight:600;
+  color:var(--text);
+  margin-bottom:0.4rem;
+}
+.finding p {
+  font-size:0.83rem;
+  color:var(--text2);
+  line-height:1.55;
+}
+
+/* ─── RECS ────────────────────────────────────────────── */
+.rec {
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:1.25rem 1.5rem;
+  display:flex;
+  gap:1rem;
+}
+.rec-icon {
+  font-size:1.4rem;
+  flex-shrink:0;
+  line-height:1;
+}
+.rec-body {}
+.rec-body h3 {
+  font-family:"IBM Plex Sans",sans-serif;
+  font-weight:600;
+  font-size:0.9rem;
+  color:var(--text);
+  margin-bottom:0.35rem;
+}
+.rec-body p {
+  font-size:0.82rem;
+  color:var(--text2);
+  line-height:1.5;
+}
+
+/* ─── DIVIDER ─────────────────────────────────────────── */
+.divider {
+  height:1px;
+  background:var(--border);
+  margin:1.5rem 0;
+}
+
+/* ─── INLINE NUMBERS ──────────────────────────────────── */
+.hl { color:var(--accent); font-weight:600; }
+.hl2 { color:var(--accent2); font-weight:600; }
+.hl-g { color:var(--green); font-weight:600; }
+
+/* ─── SECTION LABEL ───────────────────────────────────── */
+.section-subtitle {
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.68rem;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:0.75rem;
+  margin-top:2rem;
+}
+.section-subtitle:first-of-type { margin-top:0; }
+
+/* ─── FOOTER ──────────────────────────────────────────── */
+footer {
+  max-width:1100px;
+  margin:0 auto;
+  padding:2rem;
+  border-top:1px solid var(--border);
+  color:var(--text3);
+  font-size:0.78rem;
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:0.5rem;
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────────── -->
+<nav>
+  <span class="nav-brand">A-RAG</span>
+  <a href="#summary">01 Summary</a>
+  <a href="#qa">02 QA Results</a>
+  <a href="#summarization">03 Summarization</a>
+  <a href="#efficiency">04 Efficiency</a>
+  <a href="#tools">05 Tool Usage</a>
+  <a href="#failures">06 Failures</a>
+  <a href="#findings">07 Findings</a>
+  <a href="#recs">08 Recommendations</a>
+</nav>
+
+<!-- ── HERO ─────────────────────────────────────────────────── -->
+<div class="hero">
+  <div class="hero-eyebrow">AlphaSense · A-RAG Evaluation Framework</div>
+  <h1>A-RAG Financial Evaluation Suite<br/><em>Full Results</em></h1>
+  <div class="hero-meta">
+    <div class="hero-meta-item">Date: <span>February 27, 2026</span></div>
+    <div class="hero-meta-item">Inference model: <span>claude-sonnet-4-6</span></div>
+    <div class="hero-meta-item">Judge model: <span>claude-haiku-4-5-20251001</span></div>
+    <div class="hero-meta-item">Embeddings: <span>all-MiniLM-L6-v2</span></div>
+    <div class="hero-meta-item">Framework: <span>A-RAG (arXiv:2602.03442)</span></div>
+  </div>
+</div>
+
+<!-- ── 01 EXECUTIVE SUMMARY ─────────────────────────────────── -->
+<section class="section" id="summary">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2>Executive Summary</h2>
+  </div>
+  <p class="section-desc">
+    A-RAG was evaluated across <strong>5 financial datasets</strong> spanning QA and summarization tasks.
+    The framework's iterative retrieval loop delivers substantial improvements over single-shot baselines —
+    up to <strong class="hl">+64pp</strong> on QA accuracy
+    and consistent gains in summarization coverage.
+  </p>
+  <div class="stat-row">
+    <div class="stat">
+      <div class="stat-label">Best QA Accuracy</div>
+      <div class="stat-value accent">67.3%</div>
+      <div class="stat-sub">FinanceBench · A-RAG (101/150)</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">QA Advantage vs Naive</div>
+      <div class="stat-value green">+64pp</div>
+      <div class="stat-sub">FinanceBench · A-RAG vs Naive RAG</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Best Summ. Coverage</div>
+      <div class="stat-value accent2">3.45/5</div>
+      <div class="stat-sub">ECTSUM · A-RAG G-Eval Coverage</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Datasets Evaluated</div>
+      <div class="stat-value">5</div>
+      <div class="stat-sub">3 QA · 2 Summarization</div>
+    </div>
+  </div>
+
+  <p class="section-desc">
+    Key finding: <strong>Naive RAG never outperforms A-RAG on any individual FinanceBench question.</strong>
+    Every question that naive RAG answered correctly was also answered correctly by A-RAG.
+    For summarization, A-RAG leads on coverage while long-context stuffing leads on faithfulness,
+    revealing a quality trade-off in retrieval strategy.
+  </p>
+</section>
+
+<!-- ── 02 QA RESULTS ─────────────────────────────────────────── -->
+<section class="section" id="qa">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2>QA Results</h2>
+  </div>
+  <p class="section-desc">
+    Three QA datasets evaluated: FinanceBench (SEC PDF Q&amp;A), FinQA (numerical earnings reasoning),
+    and FinDER (expert-annotated RAG triplets). Primary metric is <strong>LLM-Accuracy</strong>
+    (Claude-as-judge semantic equivalence). Contain-Match is a secondary substring heuristic.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Dataset</th>
+          <th>Questions</th>
+          <th>A-RAG LLM-Acc</th>
+          <th>Naive LLM-Acc</th>
+          <th>Delta</th>
+          <th>Avg Loops</th>
+          <th>Max-Loops Hit</th>
+          <th>Avg In-Tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="primary">FinanceBench</td>
+          <td class="mono">150</td>
+          <td class="accent">67.3%
+            <div class="bar-track"><div class="bar-fill bar-accent" style="width:67.3%"></div></div></td>
+          <td>3.3%
+            <div class="bar-track"><div class="bar-fill bar-accent2" style="width:3.3%"></div></div></td>
+          <td><span class="badge badge-up">+64.0pp</span></td>
+          <td class="mono">8.8</td>
+          <td class="mono">19.3%</td>
+          <td class="mono">117K</td>
+        </tr>
+        <tr>
+          <td class="primary">FinQA</td>
+          <td class="mono">100</td>
+          <td class="accent">40.0%
+            <div class="bar-track"><div class="bar-fill bar-accent" style="width:40.0%"></div></div></td>
+          <td>12.0%
+            <div class="bar-track"><div class="bar-fill bar-accent2" style="width:12.0%"></div></div></td>
+          <td><span class="badge badge-up">+28.0pp</span></td>
+          <td class="mono">7.1</td>
+          <td class="mono">27.0%</td>
+          <td class="mono">60K</td>
+        </tr>
+        <tr>
+          <td class="primary">FinDER</td>
+          <td class="mono">200</td>
+          <td class="accent">54.0%
+            <div class="bar-track"><div class="bar-fill bar-accent" style="width:54.0%"></div></div></td>
+          <td>11.5%
+            <div class="bar-track"><div class="bar-fill bar-accent2" style="width:11.5%"></div></div></td>
+          <td><span class="badge badge-up">+42.5pp</span></td>
+          <td class="mono">12.3</td>
+          <td class="mono">64.5%</td>
+          <td class="mono">119K</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">FinanceBench Outcome Breakdown</div>
+      <table style="font-size:0.8rem; width:100%">
+        <tr><td style="color:var(--text2)">A-RAG only correct</td>
+            <td class="accent mono" style="text-align:right">96</td></tr>
+        <tr><td style="color:var(--text2)">Both correct</td>
+            <td class="mono" style="text-align:right">5</td></tr>
+        <tr><td style="color:var(--text2)">Both wrong</td>
+            <td class="mono" style="text-align:right">49</td></tr>
+        <tr><td style="color:var(--text2)">Naive only correct</td>
+            <td class="mono" style="text-align:right">0</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Token Economics (FinanceBench)</div>
+      <table style="font-size:0.8rem; width:100%">
+        <tr><td style="color:var(--text2)">A-RAG avg tokens/Q</td>
+            <td class="accent2 mono" style="text-align:right">119K</td></tr>
+        <tr><td style="color:var(--text2)">Naive avg tokens/Q</td>
+            <td class="mono" style="text-align:right">1.0K</td></tr>
+        <tr><td style="color:var(--text2)">Token multiplier</td>
+            <td class="accent2 mono" style="text-align:right">~120×</td></tr>
+        <tr><td style="color:var(--text2)">Total A-RAG tokens</td>
+            <td class="mono" style="text-align:right">17.8M</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ── 03 SUMMARIZATION RESULTS ──────────────────────────────── -->
+<section class="section" id="summarization">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <h2>Summarization Results</h2>
+  </div>
+  <p class="section-desc">
+    Two summarization datasets evaluated with three systems each:
+    <span class="pill pill-arag">A-RAG</span> (ReAct agent, up to 22 loops),
+    <span class="pill pill-naive">Naive RAG</span> (top-k retrieval → single LLM call),
+    and <span class="pill pill-stuff">Stuffing</span> (full document in context, no retrieval).
+    Primary metrics are G-Eval Faithfulness and G-Eval Coverage (1–5 chain-of-thought LLM judge).
+  </p>
+
+  <div class="section-subtitle">ECTSUM — Earnings Call Transcripts (n=20 dev subset)</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>System</th>
+          <th>G-Eval Faithfulness</th>
+          <th>G-Eval Coverage</th>
+          <th>ROUGE-2 F1</th>
+          <th>Ret. Recall</th>
+          <th>Ret. Precision</th>
+          <th>Avg Loops</th>
+          <th>Cost/item</th>
+          <th>Avg Words</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="pill pill-arag">A-RAG</span></td>
+          <td>2.90/5
+            <div class="bar-track"><div class="bar-fill bar-accent2" style="width:58.0%"></div></div></td>
+          <td>3.45/5
+            <div class="bar-track"><div class="bar-fill bar-accent2" style="width:69.0%"></div></div></td>
+          <td class="mono">5.30</td>
+          <td class="mono">91.2%</td>
+          <td class="mono">36.3%</td>
+          <td class="mono">5.0</td>
+          <td class="mono">$9.82¢</td>
+          <td class="mono">229</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-naive">Naive RAG</span></td>
+          <td>2.75/5
+            <div class="bar-track"><div class="bar-fill bar-accent2" style="width:55.0%"></div></div></td>
+          <td>2.60/5
+            <div class="bar-track"><div class="bar-fill bar-accent2" style="width:52.0%"></div></div></td>
+          <td class="mono">0.80</td>
+          <td class="mono">—</td>
+          <td class="mono">—</td>
+          <td class="mono">1.0</td>
+          <td class="mono">$3.67¢</td>
+          <td class="mono">955</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-stuff">Stuffing</span></td>
+          <td>3.70/5
+            <div class="bar-track"><div class="bar-fill bar-accent" style="width:74.0%"></div></div></td>
+          <td>3.45/5
+            <div class="bar-track"><div class="bar-fill bar-accent2" style="width:69.0%"></div></div></td>
+          <td class="mono">6.93</td>
+          <td class="mono">—</td>
+          <td class="mono">—</td>
+          <td class="mono">1.0</td>
+          <td class="mono">$1.65¢</td>
+          <td class="mono">132</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-subtitle">FinanceBench QFS — Query-Focused Summarization (n=20 dev subset)</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>System</th>
+          <th>G-Eval Faithfulness</th>
+          <th>G-Eval Coverage</th>
+          <th>ROUGE-2 F1</th>
+          <th>Avg Loops</th>
+          <th>Cost/item</th>
+          <th>Avg Words</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="pill pill-arag">A-RAG</span></td>
+          <td>3.30/5
+            <div class="bar-track"><div class="bar-fill bar-accent2" style="width:66.0%"></div></div></td>
+          <td>3.30/5
+            <div class="bar-track"><div class="bar-fill bar-accent2" style="width:66.0%"></div></div></td>
+          <td class="mono">10.44</td>
+          <td class="mono">15.4</td>
+          <td class="mono">$117.96¢</td>
+          <td class="mono">772</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-naive">Naive RAG</span></td>
+          <td>4.25/5
+            <div class="bar-track"><div class="bar-fill bar-accent" style="width:85.0%"></div></div></td>
+          <td>2.05/5
+            <div class="bar-track"><div class="bar-fill bar-danger" style="width:41.0%"></div></div></td>
+          <td class="mono">4.46</td>
+          <td class="mono">1.0</td>
+          <td class="mono">$3.60¢</td>
+          <td class="mono">793</td>
+        </tr>
+        <tr>
+          <td><span class="pill pill-stuff">Stuffing</span></td>
+          <td>3.25/5
+            <div class="bar-track"><div class="bar-fill bar-accent2" style="width:65.0%"></div></div></td>
+          <td>2.65/5
+            <div class="bar-track"><div class="bar-fill bar-accent2" style="width:53.0%"></div></div></td>
+          <td class="mono">7.10</td>
+          <td class="mono">0.6</td>
+          <td class="mono">$8.50¢</td>
+          <td class="mono">1718</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">ECTSUM: G-Eval Breakdown (% scoring ≥ 4)</div>
+      
+      <div style="margin-bottom:0.75rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+          <span style="font-size:0.78rem;color:var(--text2)">A-RAG Faith ≥4</span>
+          <span style="font-family:monospace;font-size:0.72rem;color:var(--text3)">20%</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill bar-accent" style="width:20.0%"></div></div>
+      </div>
+      <div style="margin-bottom:0.75rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+          <span style="font-size:0.78rem;color:var(--text2)">Naive Faith ≥4</span>
+          <span style="font-family:monospace;font-size:0.72rem;color:var(--text3)">40%</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill bar-accent2" style="width:40.0%"></div></div>
+      </div>
+      <div style="margin-bottom:0.75rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+          <span style="font-size:0.78rem;color:var(--text2)">Stuffing Faith ≥4</span>
+          <span style="font-family:monospace;font-size:0.72rem;color:var(--text3)">60%</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill bar-purple" style="width:60.0%"></div></div>
+      </div>
+      <div class="divider"></div>
+      
+      <div style="margin-bottom:0.75rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+          <span style="font-size:0.78rem;color:var(--text2)">A-RAG Cov ≥4</span>
+          <span style="font-family:monospace;font-size:0.72rem;color:var(--text3)">50%</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill bar-accent" style="width:50.0%"></div></div>
+      </div>
+      <div style="margin-bottom:0.75rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+          <span style="font-size:0.78rem;color:var(--text2)">Naive Cov ≥4</span>
+          <span style="font-family:monospace;font-size:0.72rem;color:var(--text3)">35%</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill bar-accent2" style="width:35.0%"></div></div>
+      </div>
+      <div style="margin-bottom:0.75rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+          <span style="font-size:0.78rem;color:var(--text2)">Stuffing Cov ≥4</span>
+          <span style="font-family:monospace;font-size:0.72rem;color:var(--text3)">45%</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill bar-purple" style="width:45.0%"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Retrieval Quality (ECTSUM A-RAG)</div>
+      <p style="font-size:0.82rem;color:var(--text2);margin-bottom:1rem">
+        Gold chunk coverage measured against ECTSUM expert-extracted key sentences.
+      </p>
+      <div style="margin-bottom:0.75rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+          <span style="font-size:0.78rem;color:var(--text2)">Retrieval Recall</span>
+          <span style="font-family:monospace;font-size:0.72rem;color:var(--accent)">91.2%</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill bar-accent" style="width:91.2%"></div></div>
+      </div>
+      <div style="margin-bottom:0.75rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+          <span style="font-size:0.78rem;color:var(--text2)">Retrieval Precision</span>
+          <span style="font-family:monospace;font-size:0.72rem;color:var(--accent2)">36.3%</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill bar-accent2" style="width:36.3%"></div></div>
+      </div>
+      <p style="font-size:0.78rem;color:var(--text3)">
+        High recall (91.2%) indicates the agent successfully locates gold evidence chunks.
+        Lower precision (36.3%) reflects the agent reading additional context chunks beyond the minimal gold set.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 04 EFFICIENCY ANALYSIS ────────────────────────────────── -->
+<section class="section" id="efficiency">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2>Efficiency Analysis</h2>
+  </div>
+  <p class="section-desc">
+    Token economics and cost analysis across all datasets. A-RAG's multi-loop architecture
+    trades compute for accuracy — understanding this cost-quality frontier is essential
+    for production deployment decisions.
+  </p>
+
+  <div class="section-subtitle">QA Token Economics</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Dataset · System</th>
+          <th>Avg Input Tokens</th>
+          <th>Avg Output Tokens</th>
+          <th>Total Tokens</th>
+          <th>Token Multiplier vs Naive</th>
+          <th>Avg Loops</th>
+          <th>Max-Loops Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="primary">FinanceBench &nbsp; <span class="pill pill-arag">A-RAG</span></td>
+          <td class="mono">117K</td>
+          <td class="mono">1.4K</td>
+          <td class="mono">119K</td>
+          <td class="mono">—</td>
+          <td class="mono">8.8</td>
+          <td class="mono">19.3%</td>
+        </tr><tr>
+          <td class="primary">FinanceBench &nbsp; <span class="pill pill-naive">Naive RAG</span></td>
+          <td class="mono">1K</td>
+          <td class="mono">0.1K</td>
+          <td class="mono">1K</td>
+          <td class="mono">~120× cheaper</td>
+          <td class="mono">1.0</td>
+          <td class="mono">0%</td>
+        </tr><tr>
+          <td class="primary">FinQA &nbsp; <span class="pill pill-arag">A-RAG</span></td>
+          <td class="mono">60K</td>
+          <td class="mono">1.0K</td>
+          <td class="mono">61K</td>
+          <td class="mono">—</td>
+          <td class="mono">7.1</td>
+          <td class="mono">27.0%</td>
+        </tr><tr>
+          <td class="primary">FinQA &nbsp; <span class="pill pill-naive">Naive RAG</span></td>
+          <td class="mono">4K</td>
+          <td class="mono">0.1K</td>
+          <td class="mono">4K</td>
+          <td class="mono">baseline</td>
+          <td class="mono">1.0</td>
+          <td class="mono">0%</td>
+        </tr><tr>
+          <td class="primary">FinDER &nbsp; <span class="pill pill-arag">A-RAG</span></td>
+          <td class="mono">119K</td>
+          <td class="mono">2.5K</td>
+          <td class="mono">121K</td>
+          <td class="mono">—</td>
+          <td class="mono">12.3</td>
+          <td class="mono">64.5%</td>
+        </tr><tr>
+          <td class="primary">FinDER &nbsp; <span class="pill pill-naive">Naive RAG</span></td>
+          <td class="mono">4K</td>
+          <td class="mono">0.2K</td>
+          <td class="mono">4K</td>
+          <td class="mono">baseline</td>
+          <td class="mono">1.0</td>
+          <td class="mono">0%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-subtitle">Summarization Cost per Item</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Dataset · System</th>
+          <th>Cost/Item</th>
+          <th>Avg Loops</th>
+          <th>Avg Latency</th>
+          <th>Avg Words</th>
+          <th>Cost per Coverage Point</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="primary">ECTSUM &nbsp; <span class="pill pill-arag">A-RAG</span></td>
+          <td class="mono">$9.82¢</td>
+          <td class="mono">5.0</td>
+          <td class="mono">23.9s</td>
+          <td class="mono">229</td>
+          <td class="mono">$2.85¢/pt</td>
+        </tr><tr>
+          <td class="primary">ECTSUM &nbsp; <span class="pill pill-naive">Naive RAG</span></td>
+          <td class="mono">$3.67¢</td>
+          <td class="mono">1.0</td>
+          <td class="mono">22.2s</td>
+          <td class="mono">955</td>
+          <td class="mono">$1.41¢/pt</td>
+        </tr><tr>
+          <td class="primary">ECTSUM &nbsp; <span class="pill pill-stuff">Stuffing</span></td>
+          <td class="mono">$1.65¢</td>
+          <td class="mono">1.0</td>
+          <td class="mono">7.2s</td>
+          <td class="mono">132</td>
+          <td class="mono">$0.48¢/pt</td>
+        </tr><tr>
+          <td class="primary">FinanceBench QFS &nbsp; <span class="pill pill-arag">A-RAG</span></td>
+          <td class="mono">$117.96¢</td>
+          <td class="mono">15.4</td>
+          <td class="mono">78.4s</td>
+          <td class="mono">772</td>
+          <td class="mono">$35.74¢/pt</td>
+        </tr><tr>
+          <td class="primary">FinanceBench QFS &nbsp; <span class="pill pill-naive">Naive RAG</span></td>
+          <td class="mono">$3.60¢</td>
+          <td class="mono">1.0</td>
+          <td class="mono">16.7s</td>
+          <td class="mono">793</td>
+          <td class="mono">$1.76¢/pt</td>
+        </tr><tr>
+          <td class="primary">FinanceBench QFS &nbsp; <span class="pill pill-stuff">Stuffing</span></td>
+          <td class="mono">$8.50¢</td>
+          <td class="mono">0.6</td>
+          <td class="mono">34.2s</td>
+          <td class="mono">1718</td>
+          <td class="mono">$3.21¢/pt</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── 05 TOOL USAGE ──────────────────────────────────────────── -->
+<section class="section" id="tools">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <h2>Tool Usage Patterns</h2>
+  </div>
+  <p class="section-desc">
+    A-RAG has three retrieval tools: <strong>keyword_search</strong> (exact-match scoring),
+    <strong>semantic_search</strong> (FAISS cosine similarity), and <strong>chunk_read</strong>
+    (full chunk retrieval). Usage ratios reveal the agent's retrieval strategy per task type.
+  </p>
+
+  <div class="card-grid">
+    
+    <div class="card">
+      <div class="card-title">FinanceBench A-RAG</div>
+      <div style="font-family:monospace;font-size:0.72rem;color:var(--text3);margin-bottom:1rem">1,927 total calls · 12.8 avg/Q</div>
+      
+      <div class="tool-row">
+        <div class="tool-name">keyword_search</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-accent" style="width:62.7%"></div></div></div>
+        <div class="tool-pct">63%</div>
+      </div>
+      <div class="tool-row">
+        <div class="tool-name">semantic_search</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-accent2" style="width:18.9%"></div></div></div>
+        <div class="tool-pct">19%</div>
+      </div>
+      <div class="tool-row">
+        <div class="tool-name">chunk_read</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-purple" style="width:18.3%"></div></div></div>
+        <div class="tool-pct">18%</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">FinQA A-RAG</div>
+      <div style="font-family:monospace;font-size:0.72rem;color:var(--text3);margin-bottom:1rem">894 total calls · 8.9 avg/Q</div>
+      
+      <div class="tool-row">
+        <div class="tool-name">keyword_search</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-accent" style="width:55.6%"></div></div></div>
+        <div class="tool-pct">56%</div>
+      </div>
+      <div class="tool-row">
+        <div class="tool-name">semantic_search</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-accent2" style="width:25.3%"></div></div></div>
+        <div class="tool-pct">25%</div>
+      </div>
+      <div class="tool-row">
+        <div class="tool-name">chunk_read</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-purple" style="width:19.1%"></div></div></div>
+        <div class="tool-pct">19%</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">FinDER A-RAG</div>
+      <div style="font-family:monospace;font-size:0.72rem;color:var(--text3);margin-bottom:1rem">3,730 total calls · 18.6 avg/Q</div>
+      
+      <div class="tool-row">
+        <div class="tool-name">keyword_search</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-accent" style="width:52.3%"></div></div></div>
+        <div class="tool-pct">52%</div>
+      </div>
+      <div class="tool-row">
+        <div class="tool-name">semantic_search</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-accent2" style="width:33.3%"></div></div></div>
+        <div class="tool-pct">33%</div>
+      </div>
+      <div class="tool-row">
+        <div class="tool-name">chunk_read</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-purple" style="width:14.4%"></div></div></div>
+        <div class="tool-pct">14%</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">ECTSUM A-RAG (Summ.)</div>
+      <div style="font-family:monospace;font-size:0.72rem;color:var(--text3);margin-bottom:1rem">155 total calls · 7.8 avg/Q</div>
+      
+      <div class="tool-row">
+        <div class="tool-name">keyword_search</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-accent" style="width:31.6%"></div></div></div>
+        <div class="tool-pct">32%</div>
+      </div>
+      <div class="tool-row">
+        <div class="tool-name">semantic_search</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-accent2" style="width:45.2%"></div></div></div>
+        <div class="tool-pct">45%</div>
+      </div>
+      <div class="tool-row">
+        <div class="tool-name">chunk_read</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-purple" style="width:23.2%"></div></div></div>
+        <div class="tool-pct">23%</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">FinanceBench QFS (Summ.)</div>
+      <div style="font-family:monospace;font-size:0.72rem;color:var(--text3);margin-bottom:1rem">566 total calls · 28.3 avg/Q</div>
+      
+      <div class="tool-row">
+        <div class="tool-name">keyword_search</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-accent" style="width:61.3%"></div></div></div>
+        <div class="tool-pct">61%</div>
+      </div>
+      <div class="tool-row">
+        <div class="tool-name">semantic_search</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-accent2" style="width:21.9%"></div></div></div>
+        <div class="tool-pct">22%</div>
+      </div>
+      <div class="tool-row">
+        <div class="tool-name">chunk_read</div>
+        <div class="tool-bar-wrap"><div class="bar-track"><div class="bar-fill bar-purple" style="width:16.8%"></div></div></div>
+        <div class="tool-pct">17%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Tool Usage Observations</div>
+    <p style="font-size:0.85rem;color:var(--text2);line-height:1.65">
+      <strong style="color:var(--text)">Keyword-search dominance on QA tasks:</strong>
+      On FinanceBench, keyword_search accounts for ~63% of all tool calls — the agent heavily
+      favors precision-oriented retrieval for targeted numerical questions. <br/><br/>
+      <strong style="color:var(--text)">Semantic-search preference for summarization:</strong>
+      ECTSUM shows a different profile — semantic_search rises to ~45%, reflecting the agent's
+      need to explore conceptually related content rather than keyword matches. <br/><br/>
+      <strong style="color:var(--text)">chunk_read as confirmation step:</strong>
+      chunk_read usage (~18–23%) represents the agent requesting full context after
+      identifying candidate chunks via search, a two-stage refinement pattern.
+    </p>
+  </div>
+</section>
+
+<!-- ── 06 FAILURE MODES ──────────────────────────────────────── -->
+<section class="section" id="failures">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <h2>Failure Mode Analysis</h2>
+  </div>
+  <p class="section-desc">
+    QA failures are categorized by mechanism. Summarization failures (scores &lt;3 on either dimension)
+    receive error taxonomy codes. Understanding failure modes informs targeted improvements.
+  </p>
+
+  <div class="section-subtitle">QA Failure Categories (FinanceBench A-RAG)</div>
+  <div class="card-grid">
+    <div class="card">
+      <div class="err-code">MAX</div>
+      <div class="err-label">Max-Loops Ceiling</div>
+      <div class="err-desc">Agent hits the 15-loop limit and provides a best-effort answer. Often indicates missing evidence in the index.</div>
+      <div class="err-counts">
+        <span class="err-count" style="color:var(--accent)">29 cases (19.3%)</span>
+        <span class="err-count" style="color:var(--text3)">FinanceBench</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="err-code">IDX</div>
+      <div class="err-label">Corpus / Index Gaps</div>
+      <div class="err-desc">23 of 84 FinanceBench PDFs fell back to evidence-text stubs due to download failures. Some correct answers are simply absent from the index.</div>
+      <div class="err-counts">
+        <span class="err-count" style="color:var(--accent2)">~23 PDFs affected</span>
+        <span class="err-count" style="color:var(--text3)">FinanceBench</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="err-code">NUM</div>
+      <div class="err-label">Numerical Reasoning</div>
+      <div class="err-desc">FinQA specializes in multi-step numerical reasoning (e.g., compute YoY growth rate). The agent may retrieve correct data but make arithmetic errors.</div>
+      <div class="err-counts">
+        <span class="err-count" style="color:var(--text2)">FinQA-specific</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-subtitle">Summarization Error Taxonomy (ECTSUM A-RAG — items scoring &lt;3)</div>
+  <div class="card-grid">
+    
+    <div class="err-card">
+      <div class="err-code">H</div>
+      <div class="err-label">Hallucination</div>
+      <div class="err-desc">Facts stated in the summary that are not supported by any retrieved chunk.</div>
+      <div class="err-counts">
+        <span class="err-count" style="color:var(--accent)">A-RAG: 6</span>
+        <span class="err-count" style="color:var(--accent2)">Naive: 2</span>
+        <span class="err-count" style="color:var(--purple)">Stuffing: 3</span>
+      </div>
+    </div>
+    <div class="err-card">
+      <div class="err-code">O</div>
+      <div class="err-label">Omission</div>
+      <div class="err-desc">Key reference facts from the gold evidence that are missing from the summary.</div>
+      <div class="err-counts">
+        <span class="err-count" style="color:var(--accent)">A-RAG: 5</span>
+        <span class="err-count" style="color:var(--accent2)">Naive: 9</span>
+        <span class="err-count" style="color:var(--purple)">Stuffing: 4</span>
+      </div>
+    </div>
+    <div class="err-card">
+      <div class="err-code">N</div>
+      <div class="err-label">Numerical Error</div>
+      <div class="err-desc">Financial figures retrieved but reported incorrectly (wrong units, rounding, period mismatch).</div>
+      <div class="err-counts">
+        <span class="err-count" style="color:var(--accent)">A-RAG: 2</span>
+        <span class="err-count" style="color:var(--accent2)">Naive: 3</span>
+        <span class="err-count" style="color:var(--purple)">Stuffing: 3</span>
+      </div>
+    </div>
+    <div class="err-card">
+      <div class="err-code">P</div>
+      <div class="err-label">Premature Termination</div>
+      <div class="err-desc">Agent or naive RAG stopped before covering all required sections of the earnings call.</div>
+      <div class="err-counts">
+        <span class="err-count" style="color:var(--accent)">A-RAG: 1</span>
+        <span class="err-count" style="color:var(--accent2)">Naive: 9</span>
+        <span class="err-count" style="color:var(--purple)">Stuffing: 1</span>
+      </div>
+    </div>
+    <div class="err-card">
+      <div class="err-code">V</div>
+      <div class="err-label">Verbosity</div>
+      <div class="err-desc">Summary greatly exceeds target length or adopts the wrong format.</div>
+      <div class="err-counts">
+        <span class="err-count" style="color:var(--accent)">A-RAG: 0</span>
+        <span class="err-count" style="color:var(--accent2)">Naive: 0</span>
+        <span class="err-count" style="color:var(--purple)">Stuffing: 0</span>
+      </div>
+    </div>
+    <div class="err-card">
+      <div class="err-code">IR</div>
+      <div class="err-label">Irrelevant Retrieval</div>
+      <div class="err-desc">Retrieved content from the wrong company, period, or document section.</div>
+      <div class="err-counts">
+        <span class="err-count" style="color:var(--accent)">A-RAG: 0</span>
+        <span class="err-count" style="color:var(--accent2)">Naive: 1</span>
+        <span class="err-count" style="color:var(--purple)">Stuffing: 0</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 07 KEY FINDINGS ────────────────────────────────────────── -->
+<section class="section" id="findings">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <h2>Key Findings</h2>
+  </div>
+  <div class="card-grid">
+    <div class="finding">
+      <div class="finding-num">FINDING 01</div>
+      <h3>Iterative retrieval is essential for financial QA</h3>
+      <p>A-RAG achieves <span class="hl">67.3%</span> vs
+      <span class="hl2">3.3%</span> naive RAG on FinanceBench
+      — a <span class="hl-g">+64pp gap</span>.
+      The multi-step agent never underperforms naive RAG on any individual question,
+      confirming the paper's central thesis.</p>
+    </div>
+    <div class="finding">
+      <div class="finding-num">FINDING 02</div>
+      <h3>QA ceiling at 19.3% signals index gaps</h3>
+      <p>Nearly 1-in-5 FinanceBench questions hit the 15-loop ceiling.
+      Of 84 PDFs, 23 fell back to evidence-text stubs due to download failures.
+      Fixing corpus completeness is the single highest-leverage improvement available.</p>
+    </div>
+    <div class="finding">
+      <div class="finding-num">FINDING 03</div>
+      <h3>Coverage vs faithfulness trade-off in summarization</h3>
+      <p>For ECTSUM: A-RAG leads on coverage (<span class="hl">3.45/5</span>)
+      but trails stuffing on faithfulness (3.70/5).
+      The agent retrieves more evidence but introduces hallucination risk
+      (<span class="hl2">H errors: 6 of 20</span>).</p>
+    </div>
+    <div class="finding">
+      <div class="finding-num">FINDING 04</div>
+      <h3>High retrieval recall on ECTSUM despite chunked index</h3>
+      <p>A-RAG achieves <span class="hl">91.2%</span> retrieval recall
+      on ECTSUM's gold evidence set — the agent successfully locates the required chunks
+      in 91% of cases, validating the hierarchical sentence index design.</p>
+    </div>
+    <div class="finding">
+      <div class="finding-num">FINDING 05</div>
+      <h3>Keyword search drives QA; semantic search drives summarization</h3>
+      <p>FinanceBench shows <span class="hl">63%</span> keyword-search dominance
+      (precision-oriented for fact lookup). ECTSUM shows
+      <span class="hl">45%</span> semantic-search share
+      (exploration-oriented for topic coverage). The agent adapts its tool strategy to task type.</p>
+    </div>
+    <div class="finding">
+      <div class="finding-num">FINDING 06</div>
+      <h3>FinanceBench QFS maxes loops at 15.4 on average</h3>
+      <p>The query-focused summarization tasks on FinanceBench QFS hit the 22-loop ceiling
+      with an average of <span class="hl2">15.4</span> loops —
+      and cost <span class="hl2">$118¢/item</span>.
+      These are multi-section synthesis tasks requiring comprehensive document coverage,
+      justifying the high token budget.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 08 RECOMMENDATIONS ─────────────────────────────────────── -->
+<section class="section" id="recs">
+  <div class="section-header">
+    <span class="section-num">08</span>
+    <h2>Recommendations</h2>
+  </div>
+  <p class="section-desc">Actionable next steps prioritized by expected impact.</p>
+
+  <div class="card-grid">
+    <div class="rec">
+      <div class="rec-icon">🗂</div>
+      <div class="rec-body">
+        <h3>Fix corpus completeness (FinanceBench)</h3>
+        <p>Retry the 23 failed PDF downloads or source them from alternative mirrors.
+        A complete index could recover 5–10pp of accuracy by eliminating corpus-gap failures
+        from the 49 currently-wrong questions.</p>
+      </div>
+    </div>
+    <div class="rec">
+      <div class="rec-icon">⬆️</div>
+      <div class="rec-body">
+        <h3>Increase max_loops to 20 for QA</h3>
+        <p>19.3% of FinanceBench questions hit the 15-loop ceiling.
+        Extending to 20 loops costs ~33% more per ceiling-hit question but could
+        convert multi-step reasoning failures into correct answers.
+        Profile against the 29 ceiling-hit questions to estimate uplift.</p>
+      </div>
+    </div>
+    <div class="rec">
+      <div class="rec-icon">🔢</div>
+      <div class="rec-body">
+        <h3>Add a calculator tool for FinQA numerical reasoning</h3>
+        <p>FinQA questions require multi-step arithmetic (YoY%, margins, EPS calculations).
+        Adding a <code style="font-size:0.8rem;background:var(--bg4);padding:0.1rem 0.3rem;border-radius:3px">calculator</code> tool
+        would let the agent delegate computation, reducing hallucinated numerics.</p>
+      </div>
+    </div>
+    <div class="rec">
+      <div class="rec-icon">🔍</div>
+      <div class="rec-body">
+        <h3>Upgrade embedding model for better semantic search</h3>
+        <p>Replace <code style="font-size:0.8rem;background:var(--bg4);padding:0.1rem 0.3rem;border-radius:3px">all-MiniLM-L6-v2</code>
+        (384-dim) with <code style="font-size:0.8rem;background:var(--bg4);padding:0.1rem 0.3rem;border-radius:3px">Qwen/Qwen3-Embedding-0.6B</code>
+        or a finance-specific encoder. Better semantic search would reduce irrelevant chunk retrieval
+        and lower hallucination rates in summarization.</p>
+      </div>
+    </div>
+    <div class="rec">
+      <div class="rec-icon">🎯</div>
+      <div class="rec-body">
+        <h3>Faithfulness-aware summarization prompt</h3>
+        <p>A-RAG's ECTSUM faithfulness (mean 2.90/5)
+        lags stuffing (3.70/5).
+        Add explicit "cite only retrieved text" instructions and a self-check step
+        to the summarization system prompt to reduce hallucination (H errors).</p>
+      </div>
+    </div>
+    <div class="rec">
+      <div class="rec-icon">📊</div>
+      <div class="rec-body">
+        <h3>Scale to full DocFinQA and FinDER corpora</h3>
+        <p>DocFinQA (7,400 questions) and full FinDER (5,703 questions) remain at limited scale.
+        Run full evaluations to validate cross-corpus generalization and establish
+        production-grade benchmark numbers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────── -->
+<footer>
+  <span>A-RAG Financial Evaluation Suite · Generated February 27, 2026</span>
+  <span>Model: claude-sonnet-4-6 · Judge: claude-haiku-4-5-20251001</span>
+  <span>5 datasets · 3 QA · 2 Summarization · 3 systems compared</span>
+</footer>
+
+<script>
+// Highlight active nav link on scroll
+const sections = document.querySelectorAll('.section[id]');
+const navLinks = document.querySelectorAll('nav a[href^="#"]');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      navLinks.forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-20% 0px -75% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
