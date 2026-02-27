@@ -221,5 +221,5 @@ OMP_NUM_THREADS=1              # prevents segfault on Apple Silicon
 | **Phase 3** | ECTSUM dataset pipeline (`prepare_ectsum.py`) | ✅ Done |
 | **Phase 4** | FinanceBench derived QFS tasks | ✅ Done |
 | **Phase 5** | Three-baseline setup (naive RAG + long-context stuffing) | ✅ Done |
-| **Phase 6** | Full evaluation run and analysis report | Pending |
-| **Phase 7** | Streamlit UI extensions | Pending |
+| **Phase 6** | Full evaluation run and analysis report | ✅ Done |
+| **Phase 7** | Streamlit UI extensions | ✅ Done |
