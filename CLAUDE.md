@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ARagPoc is a POC evaluation framework for the **A-RAG** agentic retrieval system ([arXiv:2602.03442](https://arxiv.org/abs/2602.03442)) on financial data for AlphaSense. The repo is designed to run controlled experiments across multiple financial QA datasets, retrieval tool variants, and agent configurations, producing head-to-head comparisons against simpler baselines.
 
-**Achieved result:** A-RAG scores **67.3% LLM-Accuracy** vs **3.3% for naive single-shot RAG** on FinanceBench (150 questions over real SEC PDFs).
+**Achieved results:** A-RAG scores **67.3% LLM-Accuracy** vs **3.3% for naive single-shot RAG** on FinanceBench (150Q), **40.0% vs 12.0%** on FinQA (100Q), and **54.0% vs 11.5%** on FinDER (200Q). See `results/arag_evaluation_report.html` for the full cross-dataset report.
 
 The framework is being extended to support **summarization tasks** — see `summarization_plan.md` for the full design.
 
@@ -223,3 +223,4 @@ OMP_NUM_THREADS=1              # prevents segfault on Apple Silicon
 | **Phase 5** | Three-baseline setup (naive RAG + long-context stuffing) | ✅ Done |
 | **Phase 6** | Full evaluation run and analysis report | ✅ Done |
 | **Phase 7** | Streamlit UI extensions | ✅ Done |
+| **Phase 8** | FinQA + FinDER QA evaluations + final HTML report | ✅ Done |
